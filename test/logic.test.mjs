@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readScore } from '../extension/lib/mexc.js';
-import { applyReading, buildExport, emptyState, localDay, mergeImport, renameAccount } from '../extension/lib/store.js';
+import { applyReading, buildExport, emptyState, localDay, mergeImport, removeAccount, renameAccount } from '../extension/lib/store.js';
 import { explainDrop, history, nextTier, tierOf } from '../extension/lib/analyze.js';
 
 const TZ = 'Asia/Bangkok';
@@ -81,6 +81,15 @@ test('two accounts in one browser stay apart', () => {
   assert.equal(state.rows.m1['2026-10-30'].score, 829);
   assert.equal(state.rows.m2['2026-10-30'].score, 605);
   assert.equal(state.accounts.m2.label, 'บัญชี 2');
+});
+
+test('removing an account leaves the others, and new default labels do not collide', () => {
+  let { state } = applyReading(emptyState(), reading(829), at('2026-10-30'), TZ);
+  ({ state } = applyReading(state, { ...reading(605), id: 'm2' }, at('2026-10-30'), TZ));
+  state = removeAccount(state, 'm1');
+  assert.deepEqual(Object.keys(state.rows), ['m2']);
+  ({ state } = applyReading(state, { ...reading(700), id: 'm3' }, at('2026-10-30'), TZ));
+  assert.equal(state.accounts.m3.label, 'บัญชี 3');
 });
 
 test('tiers follow MEXC thresholds', () => {

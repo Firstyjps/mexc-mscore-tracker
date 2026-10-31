@@ -1,5 +1,5 @@
 import { DIMENSIONS } from './lib/mexc.js';
-import { APP_ID, buildExport, emptyState, mergeImport, renameAccount } from './lib/store.js';
+import { APP_ID, buildExport, emptyState, localDay, mergeImport, removeAccount, renameAccount } from './lib/store.js';
 import { SCALE, TIERS, explainDrop, history, nextTier, tierOf } from './lib/analyze.js';
 
 const FACTOR_NAMES = {
@@ -58,11 +58,23 @@ function pickAccount() {
 }
 
 function renderAccounts() {
-  const accounts = Object.values(view.state.accounts);
-  $('accounts').replaceChildren(...(accounts.length > 1 ? accounts : []).map((account) => el('button', {
-    type: 'button', textContent: account.label, 'aria-current': String(account.id === view.accountId),
-    onclick: () => { view.accountId = account.id; view.showAllDays = false; render(); },
-  })));
+  const accounts = Object.values(view.state.accounts), today = localDay(Date.now());
+  $('accounts').hidden = accounts.length < 2;
+  $('accounts').replaceChildren(...(accounts.length > 1 ? accounts : []).map((account) => {
+    const list = history(view.state.rows[account.id]), latest = list[list.length - 1];
+    const tier = latest ? tierOf(latest.score) : null;
+    const isToday = latest && localDay(latest.readAt) === today;
+    const flagged = account.riskDays?.[today];
+    const score = el('span', { class: 'tile-score' }, el('b', { textContent: latest?.score ?? 'ไม่มีคะแนน' }));
+    if (tier) score.append(el('span', { class: `tile-tier-${tier.name.toLowerCase()}`, textContent: tier.name }));
+    if (latest?.change != null) score.append(el('span', { class: moveClass(latest.change), textContent: signed(latest.change) }));
+    const meta = flagged ? 'ถูกระงับคะแนนวันนี้' : !latest ? 'ยังไม่มีข้อมูล' : isToday ? 'อ่านแล้ววันนี้' : `อ่านล่าสุด ${dayLabel(latest.day)}`;
+    const name = el('span', { class: 'tile-name' }, el('img', { src: 'icons/icon-32.png', alt: '', width: 18, height: 18 }), el('span', { textContent: account.label }));
+    return el('button', {
+      type: 'button', class: `tile${flagged || (isToday && explainDrop(latest)) ? ' is-alert' : ''}`, 'aria-current': String(account.id === view.accountId),
+      onclick: () => { view.accountId = account.id; view.showAllDays = false; render(); },
+    }, name, score, el('span', { class: 'tile-meta', textContent: meta }));
+  }));
 }
 
 function renderSync() {
@@ -83,7 +95,7 @@ function renderNotice() {
   const node = $('notice'), hasData = Boolean(view.accountId);
   node.hidden = true;
   if (status === 'login' && hasData) {
-    node.replaceChildren('session ของ MEXC หมดอายุ คะแนนหยุดเก็บจนกว่าจะเข้าสู่ระบบใหม่ ',
+    node.replaceChildren('เบราว์เซอร์นี้ไม่ได้ login MEXC อยู่ คะแนนจึงหยุดเก็บ ',
       el('a', { href: 'https://www.mexc.com/user/m-score', target: '_blank', rel: 'noreferrer', textContent: 'เข้าสู่ระบบ MEXC' }));
     node.hidden = false;
   } else if (status === 'risk') {
@@ -231,6 +243,7 @@ function renderDays(all) {
 function renderSettings() {
   const account = view.state.accounts[view.accountId];
   $('rename-row').hidden = !account;
+  $('remove-account').hidden = !account;
   if (account && document.activeElement !== $('rename')) $('rename').value = account.label;
   $('notify').checked = view.state.settings.notify !== false;
 }
@@ -273,16 +286,27 @@ $('export').addEventListener('click', () => {
 });
 $('import').addEventListener('click', () => $('import-file').click());
 $('import-file').addEventListener('change', async (event) => {
-  const [file] = event.target.files;
+  const files = [...event.target.files];
   event.target.value = '';
-  if (!file) return;
+  if (!files.length) return;
   try {
-    const { state, added } = mergeImport(await load(), JSON.parse(await file.text()));
+    let state = await load(), total = 0;
+    for (const file of files) {
+      const merged = mergeImport(state, JSON.parse(await file.text()));
+      state = merged.state; total += merged.added;
+    }
     await chrome.storage.local.set(state);
-    alert(`นำเข้าแล้ว เพิ่มข้อมูลใหม่ ${added} วัน`);
+    alert(`นำเข้าแล้ว ${files.length} ไฟล์ เพิ่มข้อมูลใหม่ ${total} วัน`);
   } catch (error) {
     alert(error instanceof SyntaxError ? 'อ่านไฟล์นี้ไม่ได้ ต้องเป็นไฟล์สำรองของ M-Score Tracker' : error.message);
   }
+});
+$('remove-account').addEventListener('click', async () => {
+  const account = view.state.accounts[view.accountId];
+  if (!account || !confirm(`ลบประวัติของ ${account.label} ออกจากเบราว์เซอร์นี้? ถ้าไม่ได้สำรองไฟล์ไว้จะกู้คืนไม่ได้`)) return;
+  const state = removeAccount(view.state, account.id);
+  view.accountId = null;
+  await chrome.storage.local.set({ accounts: state.accounts, rows: state.rows });
 });
 $('wipe').addEventListener('click', async () => {
   if (!confirm('ลบประวัติคะแนนทุกบัญชีในเบราว์เซอร์นี้? ถ้าไม่ได้สำรองไฟล์ไว้จะกู้คืนไม่ได้')) return;

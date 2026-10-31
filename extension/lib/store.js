@@ -16,7 +16,12 @@ export function localDay(ms, timeZone) {
 }
 
 const ensureAccount = (state, id) => {
-  state.accounts[id] ??= { id, label: `บัญชี ${Object.keys(state.accounts).length + 1}`, riskDays: {} };
+  if (!state.accounts[id]) {
+    const taken = new Set(Object.values(state.accounts).map((account) => account.label));
+    let n = Object.keys(state.accounts).length + 1;
+    while (taken.has(`บัญชี ${n}`)) n += 1;
+    state.accounts[id] = { id, label: `บัญชี ${n}`, riskDays: {} };
+  }
   state.rows[id] ??= {};
   return state.accounts[id];
 };
@@ -85,6 +90,13 @@ export function mergeImport(previous, file) {
     }
   }
   return { state, added };
+}
+
+export function removeAccount(previous, id) {
+  const state = structuredClone(previous);
+  delete state.accounts[id];
+  delete state.rows[id];
+  return state;
 }
 
 export function renameAccount(previous, id, label) {

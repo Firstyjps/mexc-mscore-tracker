@@ -10,23 +10,28 @@
 <body>
   <div class="page">
     <header class="bar">
-      <nav id="accounts" class="accounts" aria-label="เลือกบัญชี"></nav>
+      <div class="brand">
+        <img src="icons/icon-48.png" alt="" width="30" height="30">
+        <span>M-Score Tracker</span>
+      </div>
       <div class="sync">
         <span id="sync-status" role="status"></span>
         <button id="sync-now" type="button">อัปเดตตอนนี้</button>
       </div>
     </header>
 
+    <nav id="accounts" class="accounts" aria-label="เลือกบัญชี" hidden></nav>
+
     <div id="notice" class="notice" hidden></div>
 
-    <section id="empty" class="empty" hidden>
+    <section id="empty" class="panel empty" hidden>
       <h1>เข้าสู่ระบบ MEXC เพื่อเริ่มเก็บคะแนน</h1>
       <p>เข้าสู่ระบบในเบราว์เซอร์นี้ แล้วกลับมากด “อัปเดตตอนนี้” ระบบจะเก็บคะแนนให้เองหลังจากนั้น</p>
       <a class="action" href="https://www.mexc.com/user/m-score" target="_blank" rel="noreferrer">เปิดหน้า M-Score ของ MEXC</a>
     </section>
 
     <main id="content" hidden>
-      <section class="hero" aria-labelledby="score">
+      <section class="panel hero" aria-labelledby="score">
         <div class="rail-wrap">
           <div id="reading" class="reading">
             <span id="score" class="score"></span>
@@ -40,7 +45,7 @@
       <div id="drop" class="drop" hidden></div>
 
       <div class="columns">
-        <section class="chart-area" aria-labelledby="chart-title">
+        <section class="panel" aria-labelledby="chart-title">
           <div class="section-head">
             <h2 id="chart-title">คะแนนย้อนหลัง</h2>
             <div id="ranges" class="ranges" role="group" aria-label="ช่วงเวลา"></div>
@@ -48,20 +53,20 @@
           <div id="chart" class="chart"></div>
           <p id="chart-caption" class="caption"></p>
         </section>
-        <section aria-labelledby="factors-title">
+        <section class="panel" aria-labelledby="factors-title">
           <h2 id="factors-title">ทั้ง 5 ด้าน</h2>
           <ul id="factors" class="factors"></ul>
         </section>
       </div>
 
-      <section aria-labelledby="days-title">
+      <section class="panel" aria-labelledby="days-title">
         <h2 id="days-title">รายวัน</h2>
         <div class="table-wrap"><table id="days"></table></div>
         <button id="more-days" class="link" type="button" hidden>ดูทั้งหมด</button>
       </section>
     </main>
 
-    <details class="settings">
+    <details class="panel settings">
       <summary>ตั้งค่าและสำรองข้อมูล</summary>
       <div class="settings-body">
         <label id="rename-row" class="row">ชื่อบัญชีนี้
@@ -71,10 +76,11 @@
         <p class="row-actions">
           <button id="export" type="button">สำรองข้อมูลเป็นไฟล์</button>
           <button id="import" type="button">นำเข้าไฟล์สำรอง</button>
-          <input id="import-file" type="file" accept="application/json,.json" hidden>
+          <input id="import-file" type="file" accept="application/json,.json" multiple hidden>
+          <button id="remove-account" type="button">ลบบัญชีที่เลือก</button>
           <button id="wipe" class="danger" type="button">ลบข้อมูลทั้งหมดในเบราว์เซอร์นี้</button>
         </p>
-        <p class="caption">ข้อมูลทั้งหมดอยู่ใน extension นี้ในเบราว์เซอร์นี้ ใช้หลายเบราว์เซอร์ได้โดยสำรองไฟล์จากที่หนึ่งแล้วนำเข้าอีกที่หนึ่ง</p>
+        <p class="caption">ข้อมูลทั้งหมดอยู่ใน extension นี้ในเบราว์เซอร์นี้ บัญชีที่ login คนละเบราว์เซอร์ ให้สำรองไฟล์จากแต่ละที่แล้วนำเข้ามาที่นี่ เลือกหลายไฟล์พร้อมกันได้</p>
       </div>
     </details>
   </div>
