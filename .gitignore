@@ -1,0 +1,5 @@
+node_modules/
+.DS_Store
+# ไฟล์สำรองมีรหัสบัญชีและประวัติคะแนน
+mexc-mscore-tracker-*.json
+*history*.json

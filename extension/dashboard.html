@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>M-Score Tracker</title>
+  <link rel="icon" href="icons/icon-32.png">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+  <div class="page">
+    <header class="bar">
+      <nav id="accounts" class="accounts" aria-label="เลือกบัญชี"></nav>
+      <div class="sync">
+        <span id="sync-status" role="status"></span>
+        <button id="sync-now" type="button">อัปเดตตอนนี้</button>
+      </div>
+    </header>
+
+    <div id="notice" class="notice" hidden></div>
+
+    <section id="empty" class="empty" hidden>
+      <h1>เข้าสู่ระบบ MEXC เพื่อเริ่มเก็บคะแนน</h1>
+      <p>เข้าสู่ระบบในเบราว์เซอร์นี้ แล้วกลับมากด “อัปเดตตอนนี้” ระบบจะเก็บคะแนนให้เองหลังจากนั้น</p>
+      <a class="action" href="https://www.mexc.com/user/m-score" target="_blank" rel="noreferrer">เปิดหน้า M-Score ของ MEXC</a>
+    </section>
+
+    <main id="content" hidden>
+      <section class="hero" aria-labelledby="score">
+        <div class="rail-wrap">
+          <div id="reading" class="reading">
+            <span id="score" class="score"></span>
+            <span id="tier" class="tier"></span>
+          </div>
+          <div id="rail" class="rail" role="img"></div>
+        </div>
+        <p id="summary" class="summary"></p>
+      </section>
+
+      <div id="drop" class="drop" hidden></div>
+
+      <div class="columns">
+        <section class="chart-area" aria-labelledby="chart-title">
+          <div class="section-head">
+            <h2 id="chart-title">คะแนนย้อนหลัง</h2>
+            <div id="ranges" class="ranges" role="group" aria-label="ช่วงเวลา"></div>
+          </div>
+          <div id="chart" class="chart"></div>
+          <p id="chart-caption" class="caption"></p>
+        </section>
+        <section aria-labelledby="factors-title">
+          <h2 id="factors-title">ทั้ง 5 ด้าน</h2>
+          <ul id="factors" class="factors"></ul>
+        </section>
+      </div>
+
+      <section aria-labelledby="days-title">
+        <h2 id="days-title">รายวัน</h2>
+        <div class="table-wrap"><table id="days"></table></div>
+        <button id="more-days" class="link" type="button" hidden>ดูทั้งหมด</button>
+      </section>
+    </main>
+
+    <details class="settings">
+      <summary>ตั้งค่าและสำรองข้อมูล</summary>
+      <div class="settings-body">
+        <label id="rename-row" class="row">ชื่อบัญชีนี้
+          <input id="rename" type="text" maxlength="24">
+        </label>
+        <label class="row check"><input id="notify" type="checkbox"> แจ้งเตือนเมื่อคะแนนลดตั้งแต่ 10 แต้ม หรือถูกระงับคะแนน</label>
+        <p class="row-actions">
+          <button id="export" type="button">สำรองข้อมูลเป็นไฟล์</button>
+          <button id="import" type="button">นำเข้าไฟล์สำรอง</button>
+          <input id="import-file" type="file" accept="application/json,.json" hidden>
+          <button id="wipe" class="danger" type="button">ลบข้อมูลทั้งหมดในเบราว์เซอร์นี้</button>
+        </p>
+        <p class="caption">ข้อมูลทั้งหมดอยู่ใน extension นี้ในเบราว์เซอร์นี้ ใช้หลายเบราว์เซอร์ได้โดยสำรองไฟล์จากที่หนึ่งแล้วนำเข้าอีกที่หนึ่ง</p>
+      </div>
+    </details>
+  </div>
+  <script type="module" src="dashboard.js"></script>
+</body>
+</html>
