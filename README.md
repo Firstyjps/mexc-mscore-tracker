@@ -6,9 +6,9 @@ Chrome extension ที่เก็บประวัติ M-Score ของ ME
 
 ## ติดตั้ง
 
-1. กด **Code → Download ZIP** บนหน้านี้ แล้วแตกไฟล์
+1. กด **Code → Download ZIP** บนหน้านี้ แล้วแตกไฟล์ไว้ในที่ที่จะไม่ลบ เพราะ Chrome ใช้งานจากโฟลเดอร์นี้โดยตรง
 2. เปิด `chrome://extensions` แล้วเปิด **Developer mode** มุมขวาบน
-3. กด **Load unpacked** แล้วเลือกโฟลเดอร์ `extension`
+3. กด **Load unpacked** แล้วเลือกโฟลเดอร์ `extension` ที่อยู่ข้างในโฟลเดอร์ที่แตกไฟล์
 4. เข้าสู่ระบบ [MEXC](https://www.mexc.com/user/m-score) ในเบราว์เซอร์เดียวกัน
 5. กดไอคอน M-Score Tracker แล้วกด **อัปเดตตอนนี้**
 
