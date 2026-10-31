@@ -68,12 +68,12 @@ function renderAccounts() {
     const score = el('span', { class: 'tile-score' }, el('b', { textContent: latest?.score ?? 'ไม่มีคะแนน' }));
     if (tier) score.append(el('span', { class: `tile-tier-${tier.name.toLowerCase()}`, textContent: tier.name }));
     if (latest?.change != null) score.append(el('span', { class: moveClass(latest.change), textContent: signed(latest.change) }));
-    const meta = flagged ? 'ถูกระงับคะแนนวันนี้' : !latest ? 'ยังไม่มีข้อมูล' : isToday ? 'อ่านแล้ววันนี้' : `อ่านล่าสุด ${dayLabel(latest.day)}`;
+    const meta = flagged ? 'ถูกระงับคะแนนวันนี้' : !latest ? 'ยังไม่มีข้อมูล' : isToday ? '' : `อ่านล่าสุด ${dayLabel(latest.day)}`;
     const name = el('span', { class: 'tile-name' }, el('img', { src: 'icons/icon-32.png', alt: '', width: 18, height: 18 }), el('span', { textContent: account.label }));
     return el('button', {
       type: 'button', class: `tile${flagged || (isToday && explainDrop(latest)) ? ' is-alert' : ''}`, 'aria-current': String(account.id === view.accountId),
       onclick: () => { view.accountId = account.id; view.showAllDays = false; render(); },
-    }, name, score, el('span', { class: 'tile-meta', textContent: meta }));
+    }, name, score, ...(meta ? [el('span', { class: 'tile-meta', textContent: meta })] : []));
   }));
 }
 
