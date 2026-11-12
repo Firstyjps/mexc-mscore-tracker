@@ -94,6 +94,13 @@ function renderNotice() {
   const { status, message } = view.state.sync;
   const node = $('notice'), hasData = Boolean(view.accountId);
   node.hidden = true;
+  // An account read from the server feed (lib/remote.js) has its own status; this browser's login says nothing about it.
+  const remote = view.state.accounts[view.accountId]?.remote;
+  if (remote && view.accountId !== view.state.sync.accountId) {
+    const why = { risk: 'MEXC ระงับคะแนน (risk flag)', no_score: 'MEXC ยังไม่มีคะแนน', login: 'cookie บน server หมดอายุ ต้อง login MEXC ใหม่ในเบราว์เซอร์ของบัญชีนี้', error: `อ่านจาก server ไม่สำเร็จ: ${remote.message || ''}` }[remote.status];
+    if (why) { node.textContent = why; node.hidden = false; }
+    return;
+  }
   if (status === 'login' && hasData) {
     node.replaceChildren('เบราว์เซอร์นี้ไม่ได้ login MEXC อยู่ คะแนนจึงหยุดเก็บ ',
       el('a', { href: 'https://www.mexc.com/user/m-score', target: '_blank', rel: 'noreferrer', textContent: 'เข้าสู่ระบบ MEXC' }));

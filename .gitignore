@@ -3,3 +3,6 @@ node_modules/
 # ไฟล์สำรองมีรหัสบัญชีและประวัติคะแนน
 mexc-mscore-tracker-*.json
 *history*.json
+
+# server feed tokens (lib/remote.js)
+extension/remotes.local.json

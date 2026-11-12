@@ -29,13 +29,19 @@ const ensureAccount = (state, id) => {
 export const sortedDays = (rows) => Object.keys(rows || {}).sort();
 
 /** Applies one reading from readScore. Returns the new state and what deserves a notification. */
-export function applyReading(previous, reading, now, timeZone) {
+export function applyReading(previous, reading, now, timeZone, { remote = false } = {}) {
   const state = structuredClone(previous);
   const day = localDay(now, timeZone);
   const alerts = [];
-  state.sync = { status: reading.status, at: now, accountId: reading.id ?? state.sync?.accountId ?? null, message: reading.message ?? null };
+  // A reading from a server feed (lib/remote.js) is another browser's account: it never says who is signed in here.
+  if (!remote) state.sync = { status: reading.status, at: now, accountId: reading.id ?? state.sync?.accountId ?? null, message: reading.message ?? null };
   if (!reading.id) return { state, alerts };
+  const isNew = !state.accounts[reading.id];
   const account = ensureAccount(state, reading.id);
+  if (remote) {
+    if (isNew && reading.label) account.label = String(reading.label).slice(0, 40);
+    account.remote = { status: reading.status, at: now, message: reading.message ?? null };
+  }
   if (reading.status === 'risk') {
     if (!account.riskDays[day]) alerts.push({ kind: 'risk', label: account.label });
     account.riskDays[day] = true;

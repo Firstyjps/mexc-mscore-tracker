@@ -1,6 +1,7 @@
 // Reads the score when the browser starts, every few hours, and on request. Nothing leaves this browser except the reads
-// to MEXC itself.
+// to MEXC itself, and to the owner's own server when remotes.local.json names one (lib/remote.js).
 import { readScore } from './lib/mexc.js';
+import { parseRemotes, readRemote } from './lib/remote.js';
 import { applyReading, emptyState, sortedDays } from './lib/store.js';
 import { tierOf } from './lib/analyze.js';
 
@@ -29,9 +30,21 @@ function notify(alert) {
   chrome.notifications.create({ type: 'basic', iconUrl: 'icons/icon-128.png', title: `M-Score: ${alert.label}`, message });
 }
 
+async function loadRemotes() {
+  try {
+    const response = await fetch(chrome.runtime.getURL('remotes.local.json'), { cache: 'no-store' });
+    return response.ok ? parseRemotes(await response.json()) : [];
+  } catch { return []; } // no file = no remote account
+}
+
 async function syncOnce() {
-  const reading = await readScore();
-  const { state, alerts } = applyReading(await load(), reading, Date.now(), Intl.DateTimeFormat().resolvedOptions().timeZone);
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const [reading, remotes] = await Promise.all([readScore(), loadRemotes()]);
+  let { state, alerts } = applyReading(await load(), reading, Date.now(), timeZone);
+  for (const remote of remotes) {
+    const next = applyReading(state, await readRemote(fetch, remote), Date.now(), timeZone, { remote: true });
+    state = next.state; alerts = alerts.concat(next.alerts);
+  }
   await chrome.storage.local.set(state);
   await showBadge(state);
   if (state.settings.notify) alerts.forEach(notify);

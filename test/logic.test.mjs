@@ -150,3 +150,33 @@ test('import rejects foreign files and drops bad or unknown fields', () => {
   assert.deepEqual(Object.keys(state.rows), ['m1']);
   assert.deepEqual(state.rows.m1['2026-10-30'], { score: 700, percentile: null, dimensions: { asset_level: 3 }, lastUpdate: null, readAt: 1 });
 });
+
+// Server feed (lib/remote.js, 12 Nov 2026): an account read from the owner's server never changes who is signed in here.
+import { parseRemotes, readRemote } from '../extension/lib/remote.js';
+const serve = (status, body) => async (url, opts) => ({ ok: status === 200, status, json: async () => ({ ...body, _token: opts.headers['x-sync-token'] }) });
+const REMOTE = { endpoint: 'https://dash.test/api/exec/mscore/feed', token: 'a'.repeat(64) };
+
+test('parseRemotes keeps only https endpoints with a 64-hex token', () => {
+  assert.deepEqual(parseRemotes([REMOTE, { endpoint: 'http://x', token: 'a'.repeat(64) }, { endpoint: 'https://x', token: 'short' }, null]), [REMOTE]);
+  assert.deepEqual(parseRemotes({}), []);
+});
+
+test('readRemote picks the fields and maps statuses', async () => {
+  const ok = await readRemote(serve(200, { label: 'MEXC 2', id: 'm2', status: 'ok', score: 614, percentile: 90.1, dimensions: { trade_capability: 2, junk: 9 }, lastUpdate: 7, extra: 'x' }), REMOTE);
+  assert.deepEqual(ok, { status: 'ok', id: 'm2', label: 'MEXC 2', score: 614, percentile: 90.1, dimensions: { trade_capability: 2 }, lastUpdate: 7 });
+  assert.equal((await readRemote(serve(200, { id: 'm2', status: 'risk' }), REMOTE)).status, 'risk');
+  assert.deepEqual(await readRemote(serve(401, {}), REMOTE), { status: 'error', message: 'server HTTP 401' });
+  assert.equal((await readRemote(async () => { throw new Error('x'); }, REMOTE)).status, 'error');
+});
+
+test('a remote reading adds rows under its own account and leaves sync alone', () => {
+  const local = applyReading(emptyState(), reading(800), at('2026-11-12'), TZ).state;
+  const { state } = applyReading(local, { status: 'ok', id: 'm2', label: 'MEXC 2', score: 614, percentile: 90, dimensions: {}, lastUpdate: 1 }, at('2026-11-12'), TZ, { remote: true });
+  assert.equal(state.sync.accountId, 'm1');
+  assert.equal(state.accounts.m2.label, 'MEXC 2');
+  assert.equal(state.accounts.m2.remote.status, 'ok');
+  assert.equal(state.rows.m2['2026-11-12'].score, 614);
+  const renamed = renameAccount(state, 'm2', 'Firsty');
+  const again = applyReading(renamed, { status: 'ok', id: 'm2', label: 'MEXC 2', score: 615, dimensions: {} }, at('2026-11-12'), TZ, { remote: true }).state;
+  assert.equal(again.accounts.m2.label, 'Firsty', 'an owner rename sticks');
+});
